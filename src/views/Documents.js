@@ -28,13 +28,12 @@ export default () => {
    const [list, setList] = useState([]);
    const [showModal, setShowModal] = useState(false);
    const [modalTitleField, setModalTitleField] = useState('');
-   const [modalBodyField, setModalBodyField] = useState('');
+   const [modalFileField, setModalFileField] = useState('');
    const [modalId, setModalId] = useState();
    const [modalLoading, setModalLoading] = useState(false);
 
    const fields = [
       { label: 'Título', key: 'title' },
-      { label: 'Data de Criação', key: 'datecreated', _style: { width: '200px' } },
       { label: 'Ações', key: 'actions', _style: { width: '1px' } } //a largura de 1px na tabela faz com que a largura do componente seja proporcional a de seu conteúdo interno.
    ];
 
@@ -44,7 +43,7 @@ export default () => {
 
    const getList = async () => {
       setLoading(true);
-      const result = await api.getWall();
+      const result = await api.getDocuments();
       setLoading(false);
 
       if (result.error === '') {
@@ -57,14 +56,14 @@ export default () => {
    const handleNewButton = () => {
       setModalId('');
       setModalTitleField('');
-      setModalBodyField('');
+      setModalFileField('');
       setShowModal(true);
    }
 
    const handleEditButton = (index) => {
       setModalId(list[index]['id']);
       setModalTitleField(list[index]['title']);
-      setModalBodyField(list[index]['body'])
+     // setModalBodyField(list[index]['body'])
 
       setShowModal(true)
    }
@@ -86,21 +85,25 @@ export default () => {
    }
 
    const handleModalSave = async () => {
-      if (modalTitleField && modalBodyField) {
+      if (modalTitleField) {
          setModalLoading(true);
          let result;
+         let data = {
+            title: modalTitleField
+         }
 
-         //Adicionar um novo item
+         //Adicionar um novo arquivo
          if (modalId === '') {
-            result = await api.addWall({
-               title: modalTitleField,
-               body: modalBodyField
-            });
+            if(modalFileField){
+               data.file = modalFileField;
+               result = await api.addDocument(data);
+            } else {
+               alert("Selecione o Arquivo");
+               setModalLoading(false);
+               return;
+            }
          } else { //Alterar um item
-            result = await api.updateWall(modalId, {
-               title: modalTitleField,
-               body: modalBodyField
-            });
+            result = await api.updateDocument(modalId, data);
          }
          setModalLoading(false);
          if (result.error === '') {
@@ -114,16 +117,21 @@ export default () => {
       }
    }
 
+   //Abrir o pdf do Documento
+   const handleDownloadButton = (index) => {
+      window.open(list[index]['fileurl']);
+   }
+
    return (
       <>
          <CRow>
             <CCol>
-               <h2>Mural de avisos</h2>
+               <h2>Documentos</h2>
 
                <CCard>
                   <CCardHeader>
                      <CButton className="btn btn-primary" onClick={handleNewButton}>
-                        <CIcon name="cil-check" /> Novo Aviso
+                        <CIcon name="cil-check" /> Novo Documento
                      </CButton>
                   </CCardHeader>
                   <CCardBody>
@@ -141,6 +149,9 @@ export default () => {
                            'actions': (item, index) => (
                               <td>
                                  <CButtonGroup>
+                                    <CButton color='success' onClick={()=>handleDownloadButton(index)}>
+                                       <CIcon name='cil-cloud-download' />
+                                    </CButton>
                                     <CButton color='info' onClick={() => handleEditButton(index)}>Editar</CButton>
                                     <CButton color='danger' onClick={() => handleRemoveButton(index)}>Excluir</CButton>
                                  </CButtonGroup>
@@ -152,17 +163,18 @@ export default () => {
                </CCard>
             </CCol>
          </CRow>
-
+         
+         {/* MODAL */}
          <CModal show={showModal} onClose={handleCloseModal}>
-            <CModalHeader closeButton>{modalId === '' ? 'Novo' : 'Editar'} Aviso</CModalHeader>
+            <CModalHeader closeButton>{modalId === '' ? 'Novo' : 'Editar'} Documento</CModalHeader>
 
             <CModalBody>
                <CFormGroup>
-                  <CLabel>Título do aviso</CLabel>
+                  <CLabel>Título do documento</CLabel>
                   <CInput
                      type='text'
                      id="modal-title"
-                     placeholder='Digite um título para o aviso'
+                     placeholder='Digite um título para o documento'
                      value={modalTitleField}
                      onChange={(e) => setModalTitleField(e.target.value)}
                      disabled={modalLoading}
@@ -170,13 +182,13 @@ export default () => {
                </CFormGroup>
 
                <CFormGroup>
-                  <CLabel>Corpo do aviso</CLabel>
-                  <CTextarea
-                     id="modal-body"
-                     placeholder='Digite o conteúdo do aviso'
-                     value={modalBodyField}
-                     onChange={(e) => setModalBodyField(e.target.value)}
-                     disabled={modalLoading}
+                  <CLabel>Arquivo (pdf)</CLabel>
+                  <CInput
+                     type='file'
+                     id='modal-file'
+                     name='file'
+                     placeholder='Escolha um Arquivo'
+                     onChange={e=>setModalFileField(e.target.files[0])}
                   />
                </CFormGroup>
             </CModalBody>
