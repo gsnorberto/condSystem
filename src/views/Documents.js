@@ -70,7 +70,7 @@ export default () => {
 
    const handleRemoveButton = async (index) => {
       if(window.confirm('Tem certeza que deseja excluir? ')){
-         const result = await api.removeWall(list[index]['id'])
+         const result = await api.removeDocument(list[index]['id'])
 
          if(result.error === ''){
             getList();
@@ -84,6 +84,7 @@ export default () => {
       setShowModal(false)
    }
 
+   //Adicionar ou alterar um documento
    const handleModalSave = async () => {
       if (modalTitleField) {
          setModalLoading(true);
@@ -103,9 +104,15 @@ export default () => {
                return;
             }
          } else { //Alterar um item
+            //Na edição de um item, o arquivo é opcional
+            if(modalFileField) {
+               data.file = modalFileField
+            }
             result = await api.updateDocument(modalId, data);
          }
+
          setModalLoading(false);
+
          if (result.error === '') {
             setShowModal(false);
             getList(); //atualiza a lista sem precisar atualizar a tela inteira
@@ -134,6 +141,7 @@ export default () => {
                         <CIcon name="cil-check" /> Novo Documento
                      </CButton>
                   </CCardHeader>
+
                   <CCardBody>
                      <CDataTable
                         items={list}
@@ -164,7 +172,7 @@ export default () => {
             </CCol>
          </CRow>
          
-         {/* MODAL */}
+         {/* **************** MODAL **************** */}
          <CModal show={showModal} onClose={handleCloseModal}>
             <CModalHeader closeButton>{modalId === '' ? 'Novo' : 'Editar'} Documento</CModalHeader>
 
