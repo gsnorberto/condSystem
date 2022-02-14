@@ -126,6 +126,24 @@ export default () => {
          let token = localStorage.getItem('token');
          let json = await request('delete', `/doc/${id}`, {}, token);
          return json;
+      },
+
+      getReservations: async () => {
+         let token = localStorage.getItem('token');
+         let json = await request('get', '/reservations', {}, token);
+         return json;
+      },
+
+      getUnits: async () => {
+         let token = localStorage.getItem('token');
+         let json = await request('get', '/units', {}, token);
+         return json;
+      },
+
+      getAreas: async () => {
+         let token = localStorage.getItem('token');
+         let json = await request('get', '/areas', {}, token);
+         return json;
       }
    };
 }
