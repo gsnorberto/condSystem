@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import DateTimePicker from 'react-datetime-picker';
+
 import {
    CCard,
    CCardHeader,
@@ -36,8 +38,7 @@ export default () => {
    const [modalAreaList, setModalAreaList] = useState([]);
    const [modalUnitId, setModalUnitId] = useState(0);
    const [modalAreaId, setModalAreaId] = useState(0);
-   const [modalDateField, setModalDateField] = useState('');
-   const [modalDateConvert, setModalDateConvert] = useState(new Date);
+   const [dateTimePicker, setDateTimePicker] = useState(new Date());
 
    const fields = [
       { label: 'Unidade', key: 'name_unit', sorter: false },
@@ -88,27 +89,24 @@ export default () => {
       setModalId('');
       setModalUnitId(modalUnitList[0]['id']);
       setModalAreaId(modalAreaList[0]['id']);
-      setModalDateField('');
+      setDateTimePicker(new Date());
       setShowModal(true);
    }
 
    const handleEditButton = (index) => {
-      //const dataConvertida = convertDate(list[index]['reservation_date'])
+      const dateFormated = convertDate(list[index]['reservation_date'])
 
       setModalId(list[index]['id']);
       setModalUnitId(list[index]['id_unit']);
       setModalAreaId(list[index]['id_area']);
-      setModalDateField(list[index]['reservation_date']);
-
-      //setModalDateConvert(dataConvertida)
-      // setModalBodyField(list[index]['body'])
+      setDateTimePicker(new Date (dateFormated));
 
       setShowModal(true);
    }
 
    const handleRemoveButton = async (index) => {
       if (window.confirm('Tem certeza que deseja excluir? ')) {
-         const result = await api.removeDocument(list[index]['id'])
+         const result = await api.removeReservation(list[index]['id'])
 
          if (result.error === '') {
             getList();
@@ -124,29 +122,22 @@ export default () => {
 
    //Adicionar ou alterar um documento
    const handleModalSave = async () => {
-      if (modalTitleField) {
+      if (modalUnitId && modalAreaId && dateTimePicker) {
+         const dateString = convertDateToString(dateTimePicker);
+
          setModalLoading(true);
          let result;
          let data = {
-            title: modalTitleField
+            id_unit: modalUnitId,
+            id_area: modalAreaId,
+            reservation_date: dateString
          }
 
-         //Adicionar um novo arquivo
+         //Adicionar uma nova reserva
          if (modalId === '') {
-            if (modalFileField) {
-               data.file = modalFileField;
-               result = await api.addDocument(data);
-            } else {
-               alert("Selecione o Arquivo");
-               setModalLoading(false);
-               return;
-            }
-         } else { //Alterar um item
-            //Na edição de um item, o arquivo é opcional
-            if (modalFileField) {
-               data.file = modalFileField
-            }
-            result = await api.updateDocument(modalId, data);
+            result = await api.addReservation(data);
+         } else { //Alterar reserva
+            result = await api.updateReservation(modalId, data);
          }
 
          setModalLoading(false);
@@ -169,14 +160,28 @@ export default () => {
 
    //Transformar data
    const convertDate = (date) => {
-      const [data, hora] = date.split(' ');
-      const [ano, mes, dia] = data.split('-');
-      const [hor, min, seg] = hora.split(':');
+      //2022-01-30 21:00:00
+      const newDate = date.replace(' ', 'T')
+      return newDate;
+   }
 
+   const convertDateToString = (date) => {
+      //2022-01-30 21:00:00
+      
+      let dia = date.getDate();
+      let mes = date.getMonth()+1;
+      let ano = date.getFullYear();
+      let hora = date.getHours();
+      let minuto = date.getMinutes();
 
-      const dataFormatada = new Date(data)
+      dia = dia < 10 ? `0${dia}` : dia;
+      mes = mes < 10 ? `0${mes}` : mes;
+      hora = hora < 10 ? `0${hora}` : hora;
+      minuto = minuto < 10 ? `0${minuto}` : minuto;
 
-      console.log(dataFormatada)
+      const dataHora = ano+'-'+mes+'-'+dia+' '+hora+':'+minuto+':'+'00'
+
+      return dataHora;
    }
 
    return (
@@ -185,6 +190,7 @@ export default () => {
          <CRow>
             <CCol>
                <h2>Reservas</h2>
+               {/* {console.log(convertDateToString(dateTimePicker))} */}
                <CCard>
                   <CCardHeader>
                      <CButton
@@ -208,7 +214,7 @@ export default () => {
                         striped
                         bordered
                         pagination
-                        itemsPerPage={6}
+                        itemsPerPage={10}
                         scopedSlots={{
                            'reservation_date': (item) => (
                               <td>
@@ -237,7 +243,6 @@ export default () => {
          {/* **************** MODAL **************** */}
          <CModal show={showModal} onClose={handleCloseModal}>
             <CModalHeader closeButton>{modalId === '' ? 'Novo' : 'Editar'} Reserva</CModalHeader>
-            {convertDate('2022-01-30 21:00:00')}
             <CModalBody>
                <CFormGroup>
                   <CLabel htmlFor='modal-unit'>Unidade</CLabel>
@@ -274,13 +279,13 @@ export default () => {
                </CFormGroup>
 
                <CFormGroup>
-                  <CLabel htmlFor='modal-date'>Data da Reserva</CLabel>
-                  <CInput
-                     type='text'
-                     id="modal-date"
-                     value={modalDateField}
-                     onChange={(e) => setModalDateField(e.target.value)}
+                  <CLabel htmlFor='modal-date'>Data da Reserva: </CLabel>
+                  <DateTimePicker
+                     onChange={setDateTimePicker}
+                     value={dateTimePicker}
                      disabled={modalLoading}
+                     id="modal-date"
+                     format='dd-MM-y HH:mm'
                   />
                </CFormGroup>
             </CModalBody>
