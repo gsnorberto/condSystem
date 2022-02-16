@@ -15,8 +15,6 @@ import {
    CModalBody,
    CModalFooter,
    CLabel,
-   CInput,
-   CTextarea,
    CFormGroup,
    CSelect
 } from '@coreui/react';
@@ -30,8 +28,6 @@ export default () => {
    const [loading, setLoading] = useState(true);
    const [list, setList] = useState([]);
    const [showModal, setShowModal] = useState(false);
-   const [modalTitleField, setModalTitleField] = useState('');
-   const [modalFileField, setModalFileField] = useState('');
    const [modalId, setModalId] = useState();
    const [modalLoading, setModalLoading] = useState(false);
    const [modalUnitList, setModalUnitList] = useState([]);
@@ -93,7 +89,9 @@ export default () => {
       setShowModal(true);
    }
 
-   const handleEditButton = (index) => {
+   const handleEditButton = (id) => {
+      let index = list.findIndex(v => v.id === id)
+
       const dateFormated = convertDate(list[index]['reservation_date'])
 
       setModalId(list[index]['id']);
@@ -151,11 +149,6 @@ export default () => {
       } else {
          alert('Preencha os campos!')
       }
-   }
-
-   //Abrir o pdf do Documento
-   const handleDownloadButton = (index) => {
-      window.open(list[index]['fileurl']);
    }
 
    //Transformar data
@@ -226,7 +219,7 @@ export default () => {
                                  <CButtonGroup>
                                     <CButton
                                        color='info'
-                                       onClick={() => handleEditButton(index)}
+                                       onClick={() => handleEditButton(item.id)}
                                        disabled={modalUnitList.length === 0 || modalAreaList.length === 0}
                                     >Editar</CButton>
                                     <CButton color='danger' onClick={() => handleRemoveButton(index)}>Excluir</CButton>
@@ -250,12 +243,12 @@ export default () => {
                      id="modal-unit"
                      custom
                      onChange={e => setModalUnitId(e.target.value)}
+                     value={modalUnitId}
                   >
                      {modalUnitList.map((item, index) => (
                         <option
                            key={index}
                            value={item.id}
-                           selected={item.id === modalUnitId}
                         >{item.name}</option>
                      ))}
                   </CSelect>
@@ -267,12 +260,12 @@ export default () => {
                      id="modal-area"
                      custom
                      onChange={e => setModalAreaId(e.target.value)}
+                     value={modalAreaId}
                   >
                      {modalAreaList.map((item, index) => (
                         <option
                            key={index}
                            value={item.id}
-                           selected={item.id === modalAreaId}
                         >{item.title}</option>
                      ))}
                   </CSelect>
