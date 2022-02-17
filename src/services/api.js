@@ -174,6 +174,42 @@ export default () => {
          let token = localStorage.getItem('token');
          let json = await request('put', `/warning/${id}`, {}, token);
          return json;
-      }
+      },
+
+      getFoundAndLost: async () => {
+         let token = localStorage.getItem('token');
+         let json = await request('get', '/foundandlost', {}, token);
+         return json;
+      },
+
+      updateFoundAndLost: async (id) => {
+         let token = localStorage.getItem('token');
+         let json = await request('put', `/foundandlost/${id}`, {}, token);
+         return json;
+      },
+
+      getUsers: async () => {
+         let token = localStorage.getItem('token');
+         let json = await request('get', '/users', {}, token);
+         return json;
+      },
+
+      removeUser: async (id) => {
+         let token = localStorage.getItem('token');
+         let json = await request('delete', `/user/${id}`, {}, token);
+         return json;
+      },
+
+      addUser: async (data) => {
+         let token = localStorage.getItem('token');
+         let json = await request('post', `/users`, data, token);
+         return json;
+      },
+      
+      updateUser: async (id, data) => {
+         let token = localStorage.getItem('token');
+         let json = await request('put', `/user/${id}`, data, token);
+         return json;
+      },
    };
 }
