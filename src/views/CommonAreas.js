@@ -182,7 +182,7 @@ export default () => {
          {/* ********** RESERVAS - PÁGINA ********** */}
          <CRow>
             <CCol>
-               <h2>Reservas</h2>
+               <h2>Áreas Comuns</h2>
                {/* {console.log(convertDateToString(dateTimePicker))} */}
                <CCard>
                   <CCardHeader>

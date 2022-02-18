@@ -211,5 +211,55 @@ export default () => {
          let json = await request('put', `/user/${id}`, data, token);
          return json;
       },
+
+      removeUser: async (id) => {
+         let token = localStorage.getItem('token');
+         let json = await request('delete', `/area/${id}`, {}, token);
+         return json;
+      },
+      
+      addArea: async (data) => {
+         let token = localStorage.getItem('token');
+         let formData = new FormData();
+
+         for(let i in data){
+            formData.append(i, data[i])
+         }
+
+         let req = await fetch(`${baseUrl}/areas`, {
+            method: 'POST',
+            headers: {
+               'Authorization': `Bearer ${token}`
+            },
+            body: formData
+         });
+         let json = await req.json();
+         return json;
+      },
+
+      updateArea: async (id, data) => {
+         let token = localStorage.getItem('token');
+         let formData = new FormData();
+
+         for(let i in data){
+            formData.append(i, data[i])
+         }
+
+         let req = await fetch(`${baseUrl}/area/${id}`, {
+            method: 'POST',
+            headers: {
+               'Authorization': `Bearer ${token}`
+            },
+            body: formData
+         });
+         let json = await req.json();
+         return json;
+      },
+
+      updateAreaAllowed: async (id) => {
+         let token = localStorage.getItem('token');
+         let json = await request('put', `/area/${id}/allowed`, {}, token);
+         return json;
+      }
    };
 }

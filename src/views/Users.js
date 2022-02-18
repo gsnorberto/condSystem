@@ -83,9 +83,10 @@ export default () => {
       setShowModal(true);
    }
 
-   const handleRemoveButton = async (index) => {
+   const handleRemoveButton = async (id) => {
       if (window.confirm('Tem certeza que deseja excluir? ')) {
-         const result = await api.removeReservation(list[index]['id'])
+
+         const result = await api.removeUser(id)
 
          if (result.error === '') {
             getList();
@@ -179,7 +180,7 @@ export default () => {
                                     >Editar</CButton>
                                     <CButton
                                        color='danger'
-                                       onClick={() => handleRemoveButton(index)}
+                                       onClick={() => handleRemoveButton(item.id)}
                                     >Excluir</CButton>
                                  </CButtonGroup>
                               </td>
