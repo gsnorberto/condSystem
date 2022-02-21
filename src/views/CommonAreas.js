@@ -16,7 +16,8 @@ import {
    CModalFooter,
    CLabel,
    CFormGroup,
-   CSelect
+   CSelect,
+   CSwitch
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 
@@ -37,23 +38,22 @@ export default () => {
    const [dateTimePicker, setDateTimePicker] = useState(new Date());
 
    const fields = [
-      { label: 'Unidade', key: 'name_unit', sorter: false },
-      { label: 'Área', key: 'name_area', sorter: false },
-      { label: 'Data da reserva', key: 'reservation_date' },
-      { label: 'Ações', key: 'actions', _style: { width: '1px' }, sorter: false, filter: false } //a largura de 1px na tabela faz com que a largura do componente seja proporcional a de seu conteúdo interno.
+      { label: 'Ativo', key: 'allowed', sorter: false },
+      { label: 'Capa', key: 'cover', sorter: false },
+      { label: 'Título', key: 'title' },
+      { label: 'Dias de Funcionamento', key: 'days' },
+      { label: 'Horário de Início', key: 'start_time' },
+      { label: 'Horário de Fim', key: 'end_time' },
+      { label: 'Ações', key: 'actions', _style: { width: '1px' }, sorter: false, filter: false }
    ];
 
-   //Obter lista de reservas, lista das unidades e áreas disponíveis no condomínio.
    useEffect(() => {
       getList();
-      getUnitList();
-      getAreaList();
    }, []);
 
-   //Obter lista de Reservas do BD
    const getList = async () => {
       setLoading(true);
-      const result = await api.getReservations();
+      const result = await api.getAreas();
       setLoading(false);
 
       if (result.error === '') {
@@ -61,24 +61,6 @@ export default () => {
       } else {
          alert(result.error);
       }
-   }
-
-   const getUnitList = async () => {
-      const result = await api.getUnits();
-
-      if (result.error === '') {
-         setModalUnitList(result.list)
-      }
-
-   }
-
-   const getAreaList = async () => {
-      const result = await api.getAreas();
-
-      if (result.error === '') {
-         setModalAreaList(result.list)
-      }
-
    }
 
    const handleNewButton = () => {
@@ -118,7 +100,6 @@ export default () => {
       setShowModal(false)
    }
 
-   //Adicionar ou alterar um documento
    const handleModalSave = async () => {
       if (modalUnitId && modalAreaId && dateTimePicker) {
          const dateString = convertDateToString(dateTimePicker);
@@ -151,7 +132,6 @@ export default () => {
       }
    }
 
-   //Transformar data
    const convertDate = (date) => {
       //2022-01-30 21:00:00
       const newDate = date.replace(' ', 'T')
@@ -175,6 +155,10 @@ export default () => {
       const dataHora = ano+'-'+mes+'-'+dia+' '+hora+':'+minuto+':'+'00'
 
       return dataHora;
+   }
+
+   const handleSwitchClick = () => {
+
    }
 
    return (
@@ -209,11 +193,37 @@ export default () => {
                         pagination
                         itemsPerPage={10}
                         scopedSlots={{
-                           'reservation_date': (item) => (
+                           'allowed': (item) => (
                               <td>
-                                 {item.reservation_date_formatted}
+                                 <CSwitch
+                                    color= "success"
+                                    checked={item.allowed}
+                                    onChange={()=>handleSwitchClick(item)}
+                                 />
                               </td>
                            ),
+                           'cover': (item) => (
+                              <td>
+                                 <img src={item.cover} width={100} />
+                              </td>
+                           ),
+                           'days': (item) => {
+                              let dayWords = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+                              let days = item.days.split(',')
+                              let dayString = [];
+
+                              for(let i in days){
+                                 if(days[i] && dayWords[days[i]]){
+                                    dayString.push(dayWords[days[i]])
+                                 }
+                              }
+
+                              return(
+                                 <td>
+                                    {dayString.join(', ')}
+                                 </td>
+                              )
+                           },
                            'actions': (item) => (
                               <td>
                                  <CButtonGroup>

@@ -212,7 +212,7 @@ export default () => {
          return json;
       },
 
-      removeUser: async (id) => {
+      removeArea: async (id) => {
          let token = localStorage.getItem('token');
          let json = await request('delete', `/area/${id}`, {}, token);
          return json;
