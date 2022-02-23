@@ -18,7 +18,8 @@ import {
    CFormGroup,
    CSelect,
    CSwitch,
-   CInput
+   CInput,
+   CInputCheckbox
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 
@@ -39,8 +40,6 @@ export default () => {
    const [modalDaysField, setModalDaysField] = useState([]);
    const [modalStartTimeField, setModalStartTimeField] = useState('');
    const [modalEndTimeField, setModalEndTimeField] = useState('');
-
-
 
    const [modalUnitList, setModalUnitList] = useState([]);
    const [modalAreaList, setModalAreaList] = useState([]);
@@ -88,12 +87,13 @@ export default () => {
    const handleEditButton = (id) => {
       let index = list.findIndex(v => v.id === id)
 
-      const dateFormated = convertDate(list[index]['reservation_date'])
-
       setModalId(list[index]['id']);
-      setModalUnitId(list[index]['id_unit']);
-      setModalAreaId(list[index]['id_area']);
-      setDateTimePicker(new Date (dateFormated));
+      setModalAllowedField(list[index]['allowed']);
+      setModalTitleField(list[index]['title']);
+      setModalCoverField();
+      setModalDaysField(list[index]['days'].split(','));
+      setModalStartTimeField(list[index]['start_time']);
+      setModalEndTimeField(list[index]['end_time']);
 
       setShowModal(true);
    }
@@ -115,22 +115,27 @@ export default () => {
    }
 
    const handleModalSave = async () => {
-      if (modalUnitId && modalAreaId && dateTimePicker) {
-         const dateString = convertDateToString(dateTimePicker);
+      if (modalTitleField && modalStartTimeField && modalEndTimeField) {
+         // const dateString = convertDateToString(dateTimePicker);
 
          setModalLoading(true);
          let result;
          let data = {
-            id_unit: modalUnitId,
-            id_area: modalAreaId,
-            reservation_date: dateString
+            allowed: modalAllowedField,
+            title: modalTitleField,
+            days: modalDaysField.join(','),
+            start_time: modalStartTimeField,
+            end_time: modalEndTimeField
          }
 
-         //Adicionar uma nova reserva
+         if(modalCoverField){
+            data.cover = modalCoverField;
+         }
+
          if (modalId === '') {
-            result = await api.addReservation(data);
-         } else { //Alterar reserva
-            result = await api.updateReservation(modalId, data);
+            result = await api.addArea(data);
+         } else {
+            result = await api.updateArea(modalId, data);
          }
 
          setModalLoading(false);
@@ -146,30 +151,30 @@ export default () => {
       }
    }
 
-   const convertDate = (date) => {
-      //2022-01-30 21:00:00
-      const newDate = date.replace(' ', 'T')
-      return newDate;
-   }
+   // const convertDate = (date) => {
+   //    //2022-01-30 21:00:00
+   //    const newDate = date.replace(' ', 'T')
+   //    return newDate;
+   // }
 
-   const convertDateToString = (date) => {
-      //2022-01-30 21:00:00
-      
-      let dia = date.getDate();
-      let mes = date.getMonth()+1;
-      let ano = date.getFullYear();
-      let hora = date.getHours();
-      let minuto = date.getMinutes();
+   // const convertDateToString = (date) => {
+   //    //2022-01-30 21:00:00
 
-      dia = dia < 10 ? `0${dia}` : dia;
-      mes = mes < 10 ? `0${mes}` : mes;
-      hora = hora < 10 ? `0${hora}` : hora;
-      minuto = minuto < 10 ? `0${minuto}` : minuto;
+   //    let dia = date.getDate();
+   //    let mes = date.getMonth() + 1;
+   //    let ano = date.getFullYear();
+   //    let hora = date.getHours();
+   //    let minuto = date.getMinutes();
 
-      const dataHora = ano+'-'+mes+'-'+dia+' '+hora+':'+minuto+':'+'00'
+   //    dia = dia < 10 ? `0${dia}` : dia;
+   //    mes = mes < 10 ? `0${mes}` : mes;
+   //    hora = hora < 10 ? `0${hora}` : hora;
+   //    minuto = minuto < 10 ? `0${minuto}` : minuto;
 
-      return dataHora;
-   }
+   //    const dataHora = ano + '-' + mes + '-' + dia + ' ' + hora + ':' + minuto + ':' + '00'
+
+   //    return dataHora;
+   // }
 
    const handleSwitchClick = () => {
 
@@ -179,13 +184,24 @@ export default () => {
       setModalAllowedField(1 - modalAllowedField)
    }
 
+   const toogleModalDays = (item, event) => {
+      let days = [...modalDaysField];
+
+      if(event.target.checked === false){
+         days = days.filter(day => day != item)
+      } else {
+         days.push(item);
+      }
+
+      setModalDaysField(days)
+   }
+
    return (
       <>
          {/* ********** RESERVAS - PÁGINA ********** */}
          <CRow>
             <CCol>
                <h2>Áreas Comuns</h2>
-               {/* {console.log(convertDateToString(dateTimePicker))} */}
                <CCard>
                   <CCardHeader>
                      <CButton
@@ -213,9 +229,9 @@ export default () => {
                            'allowed': (item) => (
                               <td>
                                  <CSwitch
-                                    color= "success"
+                                    color="success"
                                     checked={item.allowed}
-                                    onChange={()=>handleSwitchClick(item)}
+                                    onChange={() => handleSwitchClick(item)}
                                  />
                               </td>
                            ),
@@ -229,13 +245,13 @@ export default () => {
                               let days = item.days.split(',')
                               let dayString = [];
 
-                              for(let i in days){
-                                 if(days[i] && dayWords[days[i]]){
+                              for (let i in days) {
+                                 if (days[i] && dayWords[days[i]]) {
                                     dayString.push(dayWords[days[i]])
                                  }
                               }
 
-                              return(
+                              return (
                                  <td>
                                     {dayString.join(', ')}
                                  </td>
@@ -265,48 +281,135 @@ export default () => {
                <CFormGroup>
                   <CLabel htmlFor='modal-unit'>Ativo</CLabel>
                   <br />
-                  <CSwitch 
+                  <CSwitch
                      color="success"
                      checked={modalAllowedField}
                      onChange={handleModalSwitchClick}
                   />
                </CFormGroup>
 
+               {/* Foto da Capa */}
+               <CFormGroup>
+                  <CLabel htmlFor='modal-title'>Título</CLabel>
+                  <CInput
+                     type="text"
+                     id="modal-title"
+                     name="title"
+                     value={modalTitleField}
+                     onChange={(e) => setModalTitleField(e.target.value)}
+                  />
+               </CFormGroup>
+               
+               {/* Foto da Capa */}
                <CFormGroup>
                   <CLabel htmlFor='modal-cover'>Capa</CLabel>
-                  <CInput 
+                  <CInput
                      type="file"
                      id="modal-cover"
                      name="cover"
                      placeholder="Escolha uma Imagem"
-                     OnChange={(e)=>setModalCoverField(e.target.files[0])}
+                     onChange={(e) => setModalCoverField(e.target.files[0])}
                   />
                </CFormGroup>
-
+               
+               {/* Dias de Funcionamento */}
                <CFormGroup>
                   <CLabel htmlFor='modal-days'>Dias de Funcionamento</CLabel>
-                  
+                  <div style={{marginLeft:20}}>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-0"
+                           name="modal-days"
+                           value={0}
+                           checked={modalDaysField.includes('0')}
+                           onChange={(e)=>toogleModalDays('0', e)}
+                        />
+                        <CLabel htmlFor="modal-days-0">Segunda-Feira</CLabel>
+                     </div>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-1"
+                           name="modal-days"
+                           value={1}
+                           checked={modalDaysField.includes('1')}
+                           onChange={(e)=>toogleModalDays('1', e)}
+                        />
+                        <CLabel htmlFor="modal-days-1">Terça-Feira</CLabel>
+                     </div>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-2"
+                           name="modal-days"
+                           value={2}
+                           checked={modalDaysField.includes('2')}
+                           onChange={(e)=>toogleModalDays('2', e)}
+                        />
+                        <CLabel htmlFor="modal-days-2">Quarta-Feira</CLabel>
+                     </div>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-3"
+                           name="modal-days"
+                           value={3}
+                           checked={modalDaysField.includes('3')}
+                           onChange={(e)=>toogleModalDays('3', e)}
+                        />
+                        <CLabel htmlFor="modal-days-3">Quinta-Feira</CLabel>
+                     </div>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-4"
+                           name="modal-days"
+                           value={4}
+                           checked={modalDaysField.includes('4')}
+                           onChange={(e)=>toogleModalDays('4', e)}
+                        />
+                        <CLabel htmlFor="modal-days-4">Sexta-Feira</CLabel>
+                     </div>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-5"
+                           name="modal-days"
+                           value={5}
+                           checked={modalDaysField.includes('5')}
+                           onChange={(e)=>toogleModalDays('5', e)}
+                        />
+                        <CLabel htmlFor="modal-days-5">Sábado</CLabel>
+                     </div>
+                     <div>
+                        <CInputCheckbox
+                           id="modal-days-6"
+                           name="modal-days"
+                           value={6}
+                           checked={modalDaysField.includes('6')}
+                           onChange={(e)=>toogleModalDays('6', e)}
+                        />
+                        <CLabel htmlFor="modal-days-6">Domingo</CLabel>
+                     </div>
+                  </div>
                </CFormGroup>
-
+               
+               {/* Horário de Início */}
                <CFormGroup>
                   <CLabel htmlFor='modal-start-time'>Horário de Início</CLabel>
-                  <CInput 
+                  <CInput
                      type="time"
                      id="modal-start-time"
                      name="start_time"
                      value={modalStartTimeField}
-                     OnChange={(e)=>setModalStartTimeField(e.target.value)}
+                     onChange={(e) => setModalStartTimeField(e.target.value)}
                   />
                </CFormGroup>
 
+               {/* Horário de Fim */}
                <CFormGroup>
                   <CLabel htmlFor='modal-end-time'>Horário de Fim</CLabel>
-                  <CInput 
+                  <CInput
                      type="time"
                      id="modal-end-time"
                      name="end_time"
                      value={modalEndTimeField}
-                     OnChange={(e)=>setModalEndTimeField(e.target.value)}
+                     onChange={(e) => setModalEndTimeField(e.target.value)}
                   />
                </CFormGroup>
 
