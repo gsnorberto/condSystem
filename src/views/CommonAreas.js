@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import DateTimePicker from 'react-datetime-picker';
+import CIcon from '@coreui/icons-react';
+import useApi from '../services/api';
 
 import {
    CCard,
@@ -16,14 +17,11 @@ import {
    CModalFooter,
    CLabel,
    CFormGroup,
-   CSelect,
    CSwitch,
    CInput,
    CInputCheckbox
-} from '@coreui/react';
-import CIcon from '@coreui/icons-react';
+}from '@coreui/react';
 
-import useApi from '../services/api';
 
 export default () => {
    const api = useApi();
@@ -41,19 +39,13 @@ export default () => {
    const [modalStartTimeField, setModalStartTimeField] = useState('');
    const [modalEndTimeField, setModalEndTimeField] = useState('');
 
-   const [modalUnitList, setModalUnitList] = useState([]);
-   const [modalAreaList, setModalAreaList] = useState([]);
-   const [modalUnitId, setModalUnitId] = useState(0);
-   const [modalAreaId, setModalAreaId] = useState(0);
-   const [dateTimePicker, setDateTimePicker] = useState(new Date());
-
    const fields = [
-      { label: 'Ativo', key: 'allowed', sorter: false },
-      { label: 'Capa', key: 'cover', sorter: false },
+      { label: 'Ativo', key: 'allowed', filter: false, sorter: false },
+      { label: 'Capa', key: 'cover', filter: false, sorter: false },
       { label: 'Título', key: 'title' },
       { label: 'Dias de Funcionamento', key: 'days' },
-      { label: 'Horário de Início', key: 'start_time' },
-      { label: 'Horário de Fim', key: 'end_time' },
+      { label: 'Horário de Início', key: 'start_time', filter: false },
+      { label: 'Horário de Fim', key: 'end_time', filter: false },
       { label: 'Ações', key: 'actions', _style: { width: '1px' }, sorter: false, filter: false }
    ];
 
@@ -100,7 +92,7 @@ export default () => {
 
    const handleRemoveButton = async (id) => {
       if (window.confirm('Tem certeza que deseja excluir? ')) {
-         const result = await api.removeReservation(id)
+         const result = await api.removeArea(id)
 
          if (result.error === '') {
             getList();
@@ -151,33 +143,16 @@ export default () => {
       }
    }
 
-   // const convertDate = (date) => {
-   //    //2022-01-30 21:00:00
-   //    const newDate = date.replace(' ', 'T')
-   //    return newDate;
-   // }
+   const handleSwitchClick = async (item) => {
+      setLoading(true)
+      const result = await api.updateAreaAllowed(item.id)
+      setLoading(false)
 
-   // const convertDateToString = (date) => {
-   //    //2022-01-30 21:00:00
-
-   //    let dia = date.getDate();
-   //    let mes = date.getMonth() + 1;
-   //    let ano = date.getFullYear();
-   //    let hora = date.getHours();
-   //    let minuto = date.getMinutes();
-
-   //    dia = dia < 10 ? `0${dia}` : dia;
-   //    mes = mes < 10 ? `0${mes}` : mes;
-   //    hora = hora < 10 ? `0${hora}` : hora;
-   //    minuto = minuto < 10 ? `0${minuto}` : minuto;
-
-   //    const dataHora = ano + '-' + mes + '-' + dia + ' ' + hora + ':' + minuto + ':' + '00'
-
-   //    return dataHora;
-   // }
-
-   const handleSwitchClick = () => {
-
+      if(result.error === ''){
+         getList();
+      } else {
+         alert(result.error)
+      }
    }
 
    const handleModalSwitchClick = () => {

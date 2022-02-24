@@ -260,6 +260,12 @@ export default () => {
          let token = localStorage.getItem('token');
          let json = await request('put', `/area/${id}/allowed`, {}, token);
          return json;
+      },
+
+      searchUser: async (query) => {
+         let token = localStorage.getItem('token');
+         let json = await request('get', `/users/search`, {q: query}, token);
+         return json;
       }
    };
 }
