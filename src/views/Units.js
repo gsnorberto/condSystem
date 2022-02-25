@@ -17,8 +17,8 @@ import {
    CModalFooter,
    CLabel,
    CFormGroup,
-   CSelect,
-   CInput
+   CInput,
+   CSelect
 } from '@coreui/react';
 
 
@@ -35,7 +35,7 @@ export default () => {
    const [modalOwnerSearchField, setModalOwnerSearchField] = useState('');
    const [modalOwnerList, setModalOwnerList] = useState([]);
    const [modalOwnerField, setModalOwnerField] = useState(null);
-   
+
    const [modalUnitId, setModalUnitId] = useState(0);
    const [modalAreaId, setModalAreaId] = useState(0);
    const [dateTimePicker, setDateTimePicker] = useState(new Date());
@@ -43,7 +43,7 @@ export default () => {
    const fields = [
       { label: 'Unidade', key: 'name', sorter: false },
       { label: 'Proprietário', key: 'name_owner', sorter: false },
-      { label: 'Ações', key: 'actions', _style: { width: '1px' }, sorter: false, filter: false } 
+      { label: 'Ações', key: 'actions', _style: { width: '1px' }, sorter: false, filter: false }
    ];
 
    useEffect(() => {
@@ -52,7 +52,7 @@ export default () => {
 
    useEffect(() => {
 
-      if(modalOwnerSearchField !== ''){
+      if (modalOwnerSearchField !== '') {
          clearTimeout(timer);
          timer = setTimeout(searchUser, 1500)
       }
@@ -60,10 +60,10 @@ export default () => {
    }, [modalOwnerSearchField]);
 
    const searchUser = async () => {
-      if(modalOwnerSearchField !== ''){
+      if (modalOwnerSearchField !== '') {
          const result = await api.searchUser(modalOwnerSearchField);
 
-         if(result.error === ''){
+         if (result.error === '') {
             setModalOwnerList(result.list);
          } else {
             alert(result.error)
@@ -87,18 +87,26 @@ export default () => {
 
    const handleNewButton = () => {
       setModalId('');
+      setModalNameField('')
+      setModalOwnerField(null)
+      setModalOwnerList([])
+      setModalOwnerSearchField('')
       setShowModal(true);
    }
 
    const handleEditButton = (id) => {
       let index = list.findIndex(v => v.id === id)
 
-      const dateFormated = convertDate(list[index]['reservation_date'])
-
       setModalId(list[index]['id']);
-      setModalUnitId(list[index]['id_unit']);
-      setModalAreaId(list[index]['id_area']);
-      setDateTimePicker(new Date (dateFormated));
+      setModalNameField(list[index]['name'])
+      setModalOwnerList([]);
+      setModalOwnerSearchField('');
+
+      if(list[index]['name_owner']){
+         
+      }
+
+      setModalOwnerField()
 
       setShowModal(true);
    }
@@ -119,7 +127,6 @@ export default () => {
       setShowModal(false)
    }
 
-   //Adicionar ou alterar um documento
    const handleModalSave = async () => {
       if (modalUnitId && modalAreaId && dateTimePicker) {
          const dateString = convertDateToString(dateTimePicker);
@@ -152,7 +159,6 @@ export default () => {
       }
    }
 
-   //Transformar data
    const convertDate = (date) => {
       //2022-01-30 21:00:00
       const newDate = date.replace(' ', 'T')
@@ -161,9 +167,9 @@ export default () => {
 
    const convertDateToString = (date) => {
       //2022-01-30 21:00:00
-      
+
       let dia = date.getDate();
-      let mes = date.getMonth()+1;
+      let mes = date.getMonth() + 1;
       let ano = date.getFullYear();
       let hora = date.getHours();
       let minuto = date.getMinutes();
@@ -173,9 +179,17 @@ export default () => {
       hora = hora < 10 ? `0${hora}` : hora;
       minuto = minuto < 10 ? `0${minuto}` : minuto;
 
-      const dataHora = ano+'-'+mes+'-'+dia+' '+hora+':'+minuto+':'+'00'
+      const dataHora = ano + '-' + mes + '-' + dia + ' ' + hora + ':' + minuto + ':' + '00'
 
       return dataHora;
+   }
+
+   const selectModalOwnerField = (id) => {
+      let item = modalOwnerList.find(item => item.id == id)
+
+      setModalOwnerField(item);
+      setModalOwnerList([]);
+      setModalOwnerSearchField('');
    }
 
    return (
@@ -245,12 +259,40 @@ export default () => {
 
                <CFormGroup>
                   <CLabel htmlFor='modal-date'>Proprietário (Nome/CPF/E-mail)</CLabel>
-                  <CInput
-                     type='text'
-                     id='modal-owner'
-                     value={modalOwnerSearchField}
-                     onChange={(e) => setModalOwnerSearchField(e.target.value)}
-                  />
+                  {modalOwnerField === null &&
+                     <>
+                        <CInput
+                           type='text'
+                           id='modal-owner'
+                           value={modalOwnerSearchField}
+                           onChange={(e) => setModalOwnerSearchField(e.target.value)}
+                        />
+
+                        {modalOwnerList.length > 0 &&
+                           <CSelect
+                              sizeHtml={5}
+                              onChange={e => selectModalOwnerField(e.target.value)}
+                           >
+                              {modalOwnerList.map((item, index) => (
+                                 <option key={index} value={item.id}>{item.name}</option>
+                              ))}
+                           </CSelect>
+                        }
+                     </>
+                  }
+
+                  {modalOwnerField !== null &&
+                     <>
+                        <br />
+                        <CButton
+                           size='sm'
+                           color='danger'
+                           onClick={ ()=> setModalOwnerField(null) }
+                        >X</CButton>
+
+                        {modalOwnerField.name}
+                     </>
+                  }
                </CFormGroup>
 
 
