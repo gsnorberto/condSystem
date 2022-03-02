@@ -266,6 +266,24 @@ export default () => {
          let token = localStorage.getItem('token');
          let json = await request('get', `/users/search`, {q: query}, token);
          return json;
+      },
+
+      addUnit: async (data) => {
+         let token = localStorage.getItem('token');
+         let json = await request('post', `/units`, data, token);
+         return json;
+      },
+
+      updateUnit: async (id, data) => {
+         let token = localStorage.getItem('token');
+         let json = await request('put', `/unit/${id}`, data, token);
+         return json;
+      },
+
+      removeUnit: async (id, data) => {
+         let token = localStorage.getItem('token');
+         let json = await request('delete', `/unit/${id}`, {}, token);
+         return json;
       }
    };
 }

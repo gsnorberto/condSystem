@@ -103,17 +103,20 @@ export default () => {
       setModalOwnerSearchField('');
 
       if(list[index]['name_owner']){
-         
+         setModalOwnerField({
+            name: list[index]['name_owner'],
+            id: list[index]['id_owner']
+         });
+      } else {
+         setModalOwnerField(null)
       }
-
-      setModalOwnerField()
 
       setShowModal(true);
    }
 
    const handleRemoveButton = async (id) => {
       if (window.confirm('Tem certeza que deseja excluir? ')) {
-         const result = await api.removeReservation(id)
+         const result = await api.removeUnit(id)
 
          if (result.error === '') {
             getList();
@@ -128,60 +131,32 @@ export default () => {
    }
 
    const handleModalSave = async () => {
-      if (modalUnitId && modalAreaId && dateTimePicker) {
-         const dateString = convertDateToString(dateTimePicker);
+      if (modalNameField) {
 
          setModalLoading(true);
          let result;
          let data = {
-            id_unit: modalUnitId,
-            id_area: modalAreaId,
-            reservation_date: dateString
+            name: modalNameField,
+            id_owner: modalOwnerField.id
          }
 
-         //Adicionar uma nova reserva
          if (modalId === '') {
-            result = await api.addReservation(data);
-         } else { //Alterar reserva
-            result = await api.updateReservation(modalId, data);
+            result = await api.addUnit(data);
+         } else { 
+            result = await api.updateUnit(modalId, data);
          }
 
          setModalLoading(false);
 
          if (result.error === '') {
             setShowModal(false);
-            getList(); //atualiza a lista sem precisar atualizar a tela inteira
+            getList();
          } else {
             alert(result.error);
          }
       } else {
          alert('Preencha os campos!')
       }
-   }
-
-   const convertDate = (date) => {
-      //2022-01-30 21:00:00
-      const newDate = date.replace(' ', 'T')
-      return newDate;
-   }
-
-   const convertDateToString = (date) => {
-      //2022-01-30 21:00:00
-
-      let dia = date.getDate();
-      let mes = date.getMonth() + 1;
-      let ano = date.getFullYear();
-      let hora = date.getHours();
-      let minuto = date.getMinutes();
-
-      dia = dia < 10 ? `0${dia}` : dia;
-      mes = mes < 10 ? `0${mes}` : mes;
-      hora = hora < 10 ? `0${hora}` : hora;
-      minuto = minuto < 10 ? `0${minuto}` : minuto;
-
-      const dataHora = ano + '-' + mes + '-' + dia + ' ' + hora + ':' + minuto + ':' + '00'
-
-      return dataHora;
    }
 
    const selectModalOwnerField = (id) => {
@@ -230,6 +205,7 @@ export default () => {
                            'actions': (item) => (
                               <td>
                                  <CButtonGroup>
+                                    <CButton color='success' onClick={null}>Detalhes</CButton>
                                     <CButton color='info' onClick={() => handleEditButton(item.id)}>Editar</CButton>
                                     <CButton color='danger' onClick={() => handleRemoveButton(item.id)}>Excluir</CButton>
                                  </CButtonGroup>
@@ -246,7 +222,7 @@ export default () => {
          <CModal show={showModal} onClose={handleCloseModal}>
             <CModalHeader closeButton>{modalId === '' ? 'Novo' : 'Editar'} Reserva</CModalHeader>
             <CModalBody>
-
+               
                <CFormGroup>
                   <CLabel htmlFor='modal-date'>Nome da unidade: </CLabel>
                   <CInput
@@ -294,10 +270,9 @@ export default () => {
                      </>
                   }
                </CFormGroup>
-
-
             </CModalBody>
 
+            {/* BOTÕES DO MODAL */}
             <CModalFooter>
                <CButton color='primary' onClick={handleModalSave} disabled={modalLoading}>
                   {modalLoading ? 'Carregando...' : 'Salvar'}
